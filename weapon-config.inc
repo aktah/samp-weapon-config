@@ -63,6 +63,15 @@
 	#endif
 #endif
 
+// https://github.com/aktah/io/blob/main/io.inc
+#if !defined _IO_included
+	#tryinclude <io>
+
+	#if !defined _IO_included
+		#error The IO Include is required, get it here: github.com/aktah/io
+	#endif
+#endif
+
 #if !defined _inc_y_iterate
 	#tryinclude <YSI_Data\y_iterate>
 #endif
@@ -6347,3 +6356,180 @@ CHAIN_FORWARD:WC_OnPlayerDeathFinished(playerid, bool:cancelable) = 1;
 	#define _ALS_PlayerTextDrawSetPreviewVe
 #endif
 #define PlayerTextDrawSetPreviewVehCol WC_PlayerTextDrawSetPreviewVehC
+
+enum E_TD_STRUCT
+{
+	e_tdID,
+	e_tdFlags,
+	Float:e_tdLetterWidth,
+    Float:e_tdLetterHeight,
+    e_tdLetterColor,
+    Float:e_tdLineWidth,
+    Float:e_tdLineHeight,
+    e_tdBoxColor,
+    e_tdShadow,
+    e_tdOutline,
+    e_tdBackgroundColor,
+    e_tdStyle,
+    e_tdSelectable,
+    Float:e_tdX,
+    Float:e_tdY,
+    e_tdModelID,
+	Float:e_tdRotX,
+	Float:e_tdRotY,
+	Float:e_tdRotZ,
+    Float:e_tdZoom,
+    e_tdColor1,
+    e_tdColor2,
+	e_tdLength,
+	e_tdString[1024]
+};
+
+/**
+		bsData.Read(wTextID);
+		bsData.Read((char*)&TextDrawTransmit, sizeof(TEXT_DRAW_TRANSMIT));
+		bsData.Read(cTextLen);
+		bsData.Read(cText, cTextLen);
+		cText[cTextLen] = '\0';
+ */
+
+
+#if defined _inc_y_hooks || defined _INC_y_hooks
+	hook OnOutcomingRPC(playerid, rpcid, BitStream:bs)
+#else
+	public OnOutcomingRPC(playerid, rpcid, BitStream:bs)
+#endif
+	{
+		if(rpcid == 134) // Textdraw
+		{
+			if(playerid == -1 || isPlayerAndroid(playerid) == 0)
+				return 1;
+
+/**
+	s_HealthBarBorder = TextDrawCreate(610.01, 68.25, "_");
+	
+	if (s_HealthBarBorder == Text:INVALID_TEXT_DRAW) {
+		printf("(wc) WARN: Unable to create healthbar border textdraw");
+	} else {
+		s_InternalTextDraw[s_HealthBarBorder] = true;
+
+		TextDrawUseBox    (s_HealthBarBorder, 1);
+		TextDrawLetterSize(s_HealthBarBorder, 0.0, 0.64);
+		TextDrawTextSize  (s_HealthBarBorder, 543.75, 0.0);
+		TextDrawBoxColor  (s_HealthBarBorder, 0x000000FF);
+	}
+
+	s_HealthBarBackground = TextDrawCreate(608.01, 70.25, "_");
+
+	if (s_HealthBarBackground == Text:INVALID_TEXT_DRAW) {
+		printf("(wc) WARN: Unable to create healthbar background textdraw");
+	} else {
+		s_InternalTextDraw[s_HealthBarBackground] = true;
+
+		TextDrawUseBox    (s_HealthBarBackground, 1);
+		TextDrawLetterSize(s_HealthBarBackground, 0.0, 0.2);
+		TextDrawTextSize  (s_HealthBarBackground, 545.75, 0.0);
+		TextDrawBoxColor  (s_HealthBarBackground, 0x5A0C10FF);
+	}
+
+
+	s_HealthBarForeground[playerid] = CreatePlayerTextDraw(
+					playerid,
+					551.5 + float(health) * 0.5651,
+					70.25,
+					"_"
+				);
+	PlayerTextDrawUseBox    (playerid, s_HealthBarForeground[playerid], 1);
+	PlayerTextDrawLetterSize(playerid, s_HealthBarForeground[playerid], 0.0, 0.2);
+	PlayerTextDrawTextSize  (playerid, s_HealthBarForeground[playerid], 545.75, 0.0);
+	PlayerTextDrawBoxColor  (playerid, s_HealthBarForeground[playerid], 0xB51821FF);
+ */
+			static rpcData[E_TD_STRUCT];
+
+			BS_ReadUint16(bs, rpcData[e_tdID]);
+			BS_ReadUint8(bs, rpcData[e_tdFlags]);
+			BS_ReadFloat(bs, rpcData[e_tdLetterWidth]);
+			BS_ReadFloat(bs, rpcData[e_tdLetterHeight]);
+			BS_ReadUint32(bs, rpcData[e_tdLetterColor]);
+			BS_ReadFloat(bs, rpcData[e_tdLineWidth]);
+			BS_ReadFloat(bs, rpcData[e_tdLineHeight]);
+			BS_ReadUint32(bs, rpcData[e_tdBoxColor]);
+			BS_ReadUint8(bs, rpcData[e_tdShadow]);
+			BS_ReadUint8(bs, rpcData[e_tdOutline]);
+			BS_ReadUint32(bs, rpcData[e_tdBackgroundColor]);
+			BS_ReadUint8(bs, rpcData[e_tdStyle]);
+			BS_ReadUint8(bs, rpcData[e_tdSelectable]);
+			BS_ReadFloat(bs, rpcData[e_tdX]);
+			BS_ReadFloat(bs, rpcData[e_tdY]);
+			BS_ReadUint16(bs, rpcData[e_tdModelID]);
+			BS_ReadFloat(bs, rpcData[e_tdRotX]);
+			BS_ReadFloat(bs, rpcData[e_tdRotY]);
+			BS_ReadFloat(bs, rpcData[e_tdRotZ]);
+			BS_ReadFloat(bs, rpcData[e_tdZoom]);
+			BS_ReadUint16(bs, rpcData[e_tdColor1]);
+			BS_ReadUint16(bs, rpcData[e_tdColor2]);
+			BS_ReadUint16(bs, rpcData[e_tdLength]);
+			BS_ReadString(bs, rpcData[e_tdString], rpcData[e_tdLength]);
+
+			if ((
+				(rpcData[e_tdLineWidth] == 543.75 && rpcData[e_tdX] == 610.01 && rpcData[e_tdY] == 68.25) || // Border
+				(rpcData[e_tdLineWidth] == 545.75 && rpcData[e_tdY] == 70.25) // HP
+			) == false)
+			{
+				return 1;
+			}
+
+			rpcData[e_tdLineWidth]-=46.0;
+			rpcData[e_tdLetterHeight]+=0.1;
+			rpcData[e_tdX]-=46.0;
+			rpcData[e_tdY]-=1.40;
+
+			BS_Reset(bs);
+			BS_WriteUint16(bs, rpcData[e_tdID]);
+			BS_WriteUint8(bs, rpcData[e_tdFlags]);
+			BS_WriteFloat(bs, rpcData[e_tdLetterWidth]);
+			BS_WriteFloat(bs, rpcData[e_tdLetterHeight]);
+			BS_WriteUint32(bs, rpcData[e_tdLetterColor]);
+			BS_WriteFloat(bs, rpcData[e_tdLineWidth]);
+			BS_WriteFloat(bs, rpcData[e_tdLineHeight]);
+			BS_WriteUint32(bs, rpcData[e_tdBoxColor]);
+			BS_WriteUint8(bs, rpcData[e_tdShadow]);
+			BS_WriteUint8(bs, rpcData[e_tdOutline]);
+			BS_WriteUint32(bs, rpcData[e_tdBackgroundColor]);
+			BS_WriteUint8(bs, rpcData[e_tdStyle]);
+			BS_WriteUint8(bs, rpcData[e_tdSelectable]);
+			BS_WriteFloat(bs, rpcData[e_tdX]);
+			BS_WriteFloat(bs, rpcData[e_tdY]);
+			BS_WriteUint16(bs, rpcData[e_tdModelID]);
+			BS_WriteFloat(bs, rpcData[e_tdRotX]);
+			BS_WriteFloat(bs, rpcData[e_tdRotY]);
+			BS_WriteFloat(bs, rpcData[e_tdRotZ]);
+			BS_WriteFloat(bs, rpcData[e_tdZoom]);
+			BS_WriteUint16(bs, rpcData[e_tdColor1]);
+			BS_WriteUint16(bs, rpcData[e_tdColor2]);
+			BS_WriteUint16(bs, rpcData[e_tdLength]);
+			BS_WriteString(bs, rpcData[e_tdString]);
+
+			PR_SendRPC(bs, playerid, rpcid);
+
+			BS_ResetReadPointer(bs);
+			BS_ResetWritePointer(bs);
+			return 0;
+		}
+		#if defined INCLUDE_OnOutcomingRPC
+			return INCLUDE_OnOutcomingRPC(playerid, rpcid, BitStream:bs);
+		#else
+			return 1;
+		#endif
+	}
+#if !defined _inc_y_hooks && !defined _INC_y_hooks
+	#if defined _ALS_OnOutcomingRPC
+		#undef OnOutcomingRPC
+	#else
+		#define _ALS_OnOutcomingRPC
+	#endif
+	#define OnOutcomingRPC INCLUDE_OnOutcomingRPC
+	#if defined INCLUDE_OnOutcomingRPC
+		forward INCLUDE_OnOutcomingRPC(playerid, rpcid, BitStream:bs);
+	#endif
+#endif
